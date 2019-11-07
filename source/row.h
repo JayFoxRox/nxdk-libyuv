@@ -20,6 +20,7 @@
 #endif
 
 // The following are available on all x86 platforms
+#if 0
 #if (defined(WIN32) || defined(__x86_64__) || defined(__i386__)) && \
     !defined(LIBYUV_DISABLE_ASM)
 #define HAS_ABGRTOARGBROW_SSSE3
@@ -50,6 +51,7 @@
 #define HAS_FASTCONVERTYUV444TOARGBROW_SSE2
 #define HAS_FASTCONVERTYTOARGBROW_SSE2
 #endif
+#endif
 
 // The following are available on Windows and GCC 32 bit
 #if (defined(WIN32) || \
@@ -60,6 +62,7 @@
 #define HAS_FASTCONVERTYUVTOABGRROW_MMX
 #endif
 
+#if 0
 // The following are available on Windows
 #if defined(WIN32) && \
     !defined(LIBYUV_DISABLE_ASM)
@@ -68,6 +71,7 @@
 #define HAS_FASTCONVERTYUVTOABGRROW_SSSE3
 #define HAS_FASTCONVERTYUV444TOARGBROW_SSSE3
 #define HAS_FASTCONVERTYTOARGBROW_SSE2
+#endif
 #endif
 
 extern "C" {
@@ -126,15 +130,15 @@ void I400ToARGBRow_SSE2(const uint8* src_y, uint8* dst_argb, int pix);
 #endif
 void I400ToARGBRow_C(const uint8* src_y, uint8* dst_argb, int pix);
 
-#if defined(_MSC_VER)
-#define SIMD_ALIGNED(var) __declspec(align(16)) var
-#define TALIGN16(t, var) static __declspec(align(16)) t _ ## var
-#else // __GNUC__
+//#if defined(_MSC_VER)
+//#define SIMD_ALIGNED(var) __declspec(align(16)) var
+//#define TALIGN16(t, var) static __declspec(align(16)) t _ ## var
+//#else // __GNUC__
 #define SIMD_ALIGNED(var) var __attribute__((aligned(16)))
 #define TALIGN16(t, var) t var __attribute__((aligned(16)))
 typedef signed char __attribute__((vector_size(16))) vec8;
 typedef unsigned char __attribute__((vector_size(16))) uvec8;
-#endif
+//#endif
 
 extern "C" SIMD_ALIGNED(const int16 kCoefficientsRgbY[768][4]);
 extern "C" SIMD_ALIGNED(const int16 kCoefficientsBgraY[768][4]);
@@ -205,11 +209,18 @@ void FastConvertYToARGBRow_SSE2(const uint8* y_buf,
 #endif
 
 #ifdef HAS_FASTCONVERTYUVTOARGBROW_MMX
-void FastConvertYUVToARGBRow_MMX(const uint8* y_buf,
-                                 const uint8* u_buf,
-                                 const uint8* v_buf,
-                                 uint8* rgb_buf,
-                                 int width);
+
+#define FastConvertYUVTo___Row_MMX(name) \
+  void FastConvertYUVTo ## name ## Row_MMX(const uint8* y_buf, \
+                                   const uint8* u_buf, \
+                                   const uint8* v_buf, \
+                                   uint8* rgb_buf, \
+                                   int width); \
+
+FastConvertYUVTo___Row_MMX(ARGB)
+FastConvertYUVTo___Row_MMX(RGB565)
+FastConvertYUVTo___Row_MMX(ARGB1555) // ZRGB1555 / ORGB1555 / XRGB1555 [perf!]
+FastConvertYUVTo___Row_MMX(ARGB4444) // ZRGB4444 / ORGB4444 / XRGB4444 [same as ARGB4444 ?]
 
 void FastConvertYUVToBGRARow_MMX(const uint8* y_buf,
                                  const uint8* u_buf,

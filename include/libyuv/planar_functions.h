@@ -102,6 +102,20 @@ int I420ToARGB(const uint8* src_y, int src_stride_y,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
+#define I420To___(name) \
+  int I420To ## name ## _(const uint8* src_y, int src_stride_y, \
+                     const uint8* src_u, int src_stride_u, \
+                     const uint8* src_v, int src_stride_v, \
+                     uint8* dst_rgb, int dst_stride_rgb, \
+                     int width, int height);
+
+I420To___(ARGB)
+I420To___(ARGB4444)
+I420To___(RGB565)
+I420To___(ARGB1555) 
+
+#undef I420To___
+
 // Convert I420 to BGRA.
 int I420ToBGRA(const uint8* src_y, int src_stride_y,
                const uint8* src_u, int src_stride_u,

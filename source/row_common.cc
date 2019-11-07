@@ -192,16 +192,16 @@ void RAWToUVRow_SSSE3(const uint8* src_argb, int src_stride_argb,
 void RGB24ToUVRow_SSSE3(const uint8* src_argb, int src_stride_argb,
                         uint8* dst_u, uint8* dst_v, int pix) {
   SIMD_ALIGNED(uint8 row[kMaxStride * 2]);
-  BG24ToARGBRow_SSSE3(src_argb, row, pix);
-  BG24ToARGBRow_SSSE3(src_argb + src_stride_argb, row + kMaxStride, pix);
+  BG24ToARGBRow_C(src_argb, row, pix);
+  BG24ToARGBRow_C(src_argb + src_stride_argb, row + kMaxStride, pix);
   ARGBToUVRow_C(row, kMaxStride, dst_u, dst_v, pix);
 }
 
 void RAWToUVRow_SSSE3(const uint8* src_argb, int src_stride_argb,
                       uint8* dst_u, uint8* dst_v, int pix) {
   SIMD_ALIGNED(uint8 row[kMaxStride * 2]);
-  RAWToARGBRow_SSSE3(src_argb, row, pix);
-  RAWToARGBRow_SSSE3(src_argb + src_stride_argb, row + kMaxStride, pix);
+  RAWToARGBRow_C(src_argb, row, pix);
+  RAWToARGBRow_C(src_argb + src_stride_argb, row + kMaxStride, pix);
   ARGBToUVRow_C(row, kMaxStride, dst_u, dst_v, pix);
 }
 

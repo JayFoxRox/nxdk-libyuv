@@ -21,7 +21,7 @@
 
 // TODO(fbarchard): Use cpuid.h when gcc 4.4 is used on OSX and Linux.
 #if (defined(__pic__) || defined(__APPLE__)) && defined(__i386__)
-static inline void __cpuid(int cpu_info[4], int info_type) {
+static inline void x__cpuid(int cpu_info[4], int info_type) {
   asm volatile (
     "mov %%ebx, %%edi                          \n"
     "cpuid                                     \n"
@@ -31,7 +31,7 @@ static inline void __cpuid(int cpu_info[4], int info_type) {
   );
 }
 #elif defined(__i386__) || defined(__x86_64__)
-static inline void __cpuid(int cpu_info[4], int info_type) {
+static inline void x__cpuid(int cpu_info[4], int info_type) {
   asm volatile (
     "cpuid                                     \n"
     : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
@@ -49,7 +49,7 @@ static int cpu_info_ = 0;
 static void InitCpuFlags() {
 #ifdef CPU_X86
   int cpu_info[4];
-  __cpuid(cpu_info, 1);
+  x__cpuid(cpu_info, 1);
   cpu_info_ = (cpu_info[3] & 0x04000000 ? kCpuHasSSE2 : 0) |
               (cpu_info[2] & 0x00000200 ? kCpuHasSSSE3 : 0) |
               kCpuInitialized;

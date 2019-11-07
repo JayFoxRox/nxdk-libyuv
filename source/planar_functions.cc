@@ -1138,6 +1138,7 @@ int I420ToARGB(const uint8* src_y, int src_stride_y,
   } else
 #endif
 #if defined(HAS_FASTCONVERTYUVTOARGBROW_SSE2)
+#error foo
   if (TestCpuFlag(kCpuHasSSE2) &&
       (width % 4 == 0) &&
       IS_ALIGNED(dst_argb, 16) && (dst_stride_argb % 16 == 0)) {
@@ -1168,10 +1169,12 @@ int I420ToARGB(const uint8* src_y, int src_stride_y,
     }
   }
   // MMX used for FastConvertYUVToARGBRow requires an emms instruction.
-  EMMS();
+  EMMS(); 
   return 0;
 }
-
+  
+#include "jfr_planar_functions.cc"   
+ 
 // Convert I420 to BGRA.
 int I420ToBGRA(const uint8* src_y, int src_stride_y,
                const uint8* src_u, int src_stride_u,
@@ -1179,14 +1182,14 @@ int I420ToBGRA(const uint8* src_y, int src_stride_y,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height) {
   // Negative height means invert the image.
-  if (height < 0) {
-    height = -height;
-    dst_argb = dst_argb + (height - 1) * dst_stride_argb;
-    dst_stride_argb = -dst_stride_argb;
+  if (height < 0) {  
+    height = -height; 
+    dst_argb = dst_argb + (height - 1) * dst_stride_argb; 
+    dst_stride_argb = -dst_stride_argb; 
   }
-  void (*FastConvertYUVToBGRARow)(const uint8* y_buf,
-                                   const uint8* u_buf,
-                                   const uint8* v_buf,
+  void (*FastConvertYUVToBGRARow)(const uint8* y_buf, 
+                                   const uint8* u_buf, 
+                                   const uint8* v_buf, 
                                    uint8* rgb_buf,
                                    int width);
 #if defined(HAS_FASTCONVERTYUVTOBGRAROW_SSSE3)
@@ -1509,7 +1512,7 @@ int ARGBToI400(const uint8* src_argb, int src_stride_argb,
     src_stride_argb = -src_stride_argb;
   }
 void (*ARGBToYRow)(const uint8* src_argb, uint8* dst_y, int pix);
-#if defined(HAS_ARGBTOYROW_SSSE3)
+#if defined(HAS_ARGBTOYROW_SSSE3) 
   if (TestCpuFlag(kCpuHasSSSE3) &&
       (width % 4 == 0) &&
       IS_ALIGNED(src_argb, 16) && (src_stride_argb % 16 == 0) &&

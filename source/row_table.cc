@@ -210,7 +210,7 @@ SIMD_ALIGNED(const int16 NAME[256 * 3][4]) = {\
 
 #define CS(v) static_cast<int16>(v)
 
-// ARGB table
+// ARGB table [order is BGRA]
 #define RGBY(i) { \
   CS(1.164 * 64 * (i - 16) + 0.5), \
   CS(1.164 * 64 * (i - 16) + 0.5), \

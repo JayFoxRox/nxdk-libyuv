@@ -172,7 +172,8 @@ int I420ToARGB4444(const uint8* src_y, int src_stride_y,
   return 0;
 }
 
-
+#if 1
+//FIXME: This also has a faster (?) equivalent in I420ToRGB565_
 int I420ToRGB565(const uint8* src_y, int src_stride_y,
                  const uint8* src_u, int src_stride_u,
                  const uint8* src_v, int src_stride_v,
@@ -182,18 +183,20 @@ int I420ToRGB565(const uint8* src_y, int src_stride_y,
     return -1;
   }
 
+  height *= -1;
+
   // Negative height means invert the image.
   if (height < 0) {
     height = -height;
     src_y = src_y + (height - 1) * src_stride_y;
-    src_u = src_u + (height - 1) * src_stride_u;
-    src_v = src_v + (height - 1) * src_stride_v;
+    src_u = src_u + (((height + 1) >> 1) - 1) * src_stride_u;
+    src_v = src_v + (((height + 1) >> 1) - 1) * src_stride_v;
     src_stride_y = -src_stride_y;
     src_stride_u = -src_stride_u;
     src_stride_v = -src_stride_v;
   }
-  uint16* out = (uint16*)(dst_frame) + dst_stride_frame * (height - 1);
-  uint16* out2 = out - dst_stride_frame;
+  uint16* out = (uint16*)(dst_frame) + dst_stride_frame / 2 * (height - 1);
+  uint16* out2 = out - dst_stride_frame / 2;
 
   int tmp_r, tmp_g, tmp_b;
   const uint8* y1,* y2, * u, * v;
@@ -245,11 +248,12 @@ int I420ToRGB565(const uint8* src_y, int src_stride_y,
     y2 += 2 * src_stride_y - width;
     u += src_stride_u - ((width + 1) >> 1);
     v += src_stride_v - ((width + 1) >> 1);
-    out -= 2 * dst_stride_frame + width;
-    out2 -=  2 * dst_stride_frame + width;
+    out -= dst_stride_frame + width;
+    out2 -= dst_stride_frame + width;
   }
   return 0;
 }
+#endif
 
 
 int I420ToARGB1555(const uint8* src_y, int src_stride_y,
@@ -260,8 +264,21 @@ int I420ToARGB1555(const uint8* src_y, int src_stride_y,
   if (src_y == NULL || src_u == NULL || src_v == NULL || dst_frame == NULL) {
     return -1;
   }
-  uint16* out = (uint16*)(dst_frame) + dst_stride_frame * (height - 1);
-  uint16* out2 = out - dst_stride_frame ;
+
+  height *= -1;
+
+  // Negative height means invert the image.
+  if (height < 0) {
+    height = -height;
+    src_y = src_y + (height - 1) * src_stride_y;
+    src_u = src_u + (((height + 1) >> 1) - 1) * src_stride_u;
+    src_v = src_v + (((height + 1) >> 1) - 1) * src_stride_v;
+    src_stride_y = -src_stride_y;
+    src_stride_u = -src_stride_u;
+    src_stride_v = -src_stride_v;
+  }
+  uint16* out = (uint16*)(dst_frame) + dst_stride_frame / 2 * (height - 1);
+  uint16* out2 = out - dst_stride_frame / 2;
   int32 tmp_r, tmp_g, tmp_b;
   const uint8 *y1,*y2, *u, *v;
   int h, w;
@@ -274,6 +291,10 @@ int I420ToARGB1555(const uint8* src_y, int src_stride_y,
   for (h = ((height + 1) >> 1); h > 0; h--){
     // 2 rows at a time, 2 y's at a time
     for (w = 0; w < ((width + 1) >> 1); w++){
+
+      // Want 0x8000 for O555 and 0x0000 for Z555
+      const uint16_t alpha = 0x0000;
+
       // Vertical and horizontal sub-sampling
       // 1. Convert to RGB888
       // 2. Shift to adequate location (in the 16 bit word) - RGB 555
@@ -281,26 +302,26 @@ int I420ToARGB1555(const uint8* src_y, int src_stride_y,
       tmp_r = (int32)((mapYc[y1[0]] + mapVcr[v[0]] + 128) >> 8);
       tmp_g = (int32)((mapYc[y1[0]] + mapUcg[u[0]] + mapVcg[v[0]] + 128) >> 8);
       tmp_b = (int32)((mapYc[y1[0]] + mapUcb[u[0]] + 128) >> 8);
-      out[0]  = (uint16)(0x8000 + ((Clip(tmp_r) & 0xf8) << 10) +
-                ((Clip(tmp_g) & 0xf8) << 3) + (Clip(tmp_b) >> 3));
+      out[0]  = (uint16)(alpha + ((Clip(tmp_r) & 0xf8) << 7) +
+                ((Clip(tmp_g) & 0xf8) << 2) + (Clip(tmp_b) >> 3));
 
       tmp_r = (int32)((mapYc[y1[1]] + mapVcr[v[0]] + 128) >> 8);
       tmp_g = (int32)((mapYc[y1[1]] + mapUcg[u[0]] + mapVcg[v[0]]  + 128) >> 8);
       tmp_b = (int32)((mapYc[y1[1]] + mapUcb[u[0]] + 128) >> 8);
-      out[1]  = (uint16)(0x8000 + ((Clip(tmp_r) & 0xf8) << 10) +
-                ((Clip(tmp_g) & 0xf8) << 3)  + (Clip(tmp_b) >> 3));
+      out[1]  = (uint16)(alpha + ((Clip(tmp_r) & 0xf8) << 7) +
+                ((Clip(tmp_g) & 0xf8) << 2)  + (Clip(tmp_b) >> 3));
 
       tmp_r = (int32)((mapYc[y2[0]] + mapVcr[v[0]] + 128) >> 8);
       tmp_g = (int32)((mapYc[y2[0]] + mapUcg[u[0]] + mapVcg[v[0]] + 128) >> 8);
       tmp_b = (int32)((mapYc[y2[0]] + mapUcb[u[0]] + 128) >> 8);
-      out2[0]  = (uint16)(0x8000 + ((Clip(tmp_r) & 0xf8) << 10) +
-                 ((Clip(tmp_g) & 0xf8) << 3) + (Clip(tmp_b) >> 3));
+      out2[0]  = (uint16)(alpha + ((Clip(tmp_r) & 0xf8) << 7) +
+                 ((Clip(tmp_g) & 0xf8) << 2) + (Clip(tmp_b) >> 3));
 
       tmp_r = (int32)((mapYc[y2[1]] + mapVcr[v[0]] + 128) >> 8);
       tmp_g = (int32)((mapYc[y2[1]] + mapUcg[u[0]] + mapVcg[v[0]] + 128) >> 8);
       tmp_b = (int32)((mapYc[y2[1]] + mapUcb[u[0]] + 128) >> 8);
-      out2[1]  = (uint16)(0x8000 + ((Clip(tmp_r) & 0xf8) << 10) +
-                 ((Clip(tmp_g) & 0xf8) << 3)  + (Clip(tmp_b) >> 3));
+      out2[1]  = (uint16)(alpha + ((Clip(tmp_r) & 0xf8) << 7) +
+                 ((Clip(tmp_g) & 0xf8) << 2)  + (Clip(tmp_b) >> 3));
 
       y1 += 2;
       y2 += 2;
@@ -313,8 +334,8 @@ int I420ToARGB1555(const uint8* src_y, int src_stride_y,
     y2 += 2 * src_stride_y - width;
     u += src_stride_u - ((width + 1) >> 1);
     v += src_stride_v - ((width + 1) >> 1);
-    out -= 2 * dst_stride_frame + width;
-    out2 -=  2 * dst_stride_frame + width;
+    out -= dst_stride_frame + width;
+    out2 -= dst_stride_frame + width;
   }
   return 0;
 }
@@ -1007,6 +1028,7 @@ int ConvertToI420(const uint8* sample, size_t sample_size,
                  v, v_stride,
                  dst_width, inv_dst_height);
       break;
+#if 0
     case FOURCC_NV12:
       src = sample + (src_width * crop_y + crop_x);
       src_uv = sample + aligned_src_width * (src_height + crop_y / 2) + crop_x;
@@ -1028,6 +1050,7 @@ int ConvertToI420(const uint8* sample, size_t sample_size,
                        v, v_stride,
                        dst_width, inv_dst_height, rotation);
       break;
+#endif
     case FOURCC_Q420:
       src = sample + (src_width + aligned_src_width * 2) * crop_y + crop_x;
       src_uv = sample + (src_width + aligned_src_width * 2) * crop_y +
@@ -1039,6 +1062,7 @@ int ConvertToI420(const uint8* sample, size_t sample_size,
                  v, v_stride,
                  dst_width, inv_dst_height);
       break;
+#if 0
     // Triplanar formats
     case FOURCC_I420:
     case FOURCC_YV12: {
@@ -1067,6 +1091,7 @@ int ConvertToI420(const uint8* sample, size_t sample_size,
                  dst_width, inv_dst_height, rotation);
       break;
     }
+#endif
     // Formats not supported
     case FOURCC_MJPG:
     default:

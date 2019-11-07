@@ -32,7 +32,10 @@ static const vec8 kARGBToU = {
 };
 
 static const uvec8 kARGBToV = {
-  -18, -94, 112, 0, -18, -94, 112, 0, -18, -94, 112, 0, -18, -94, 112, 0,
+  (unsigned char)-18, (unsigned char)-94, 112, 0,
+  (unsigned char)-18, (unsigned char)-94, 112, 0,
+  (unsigned char)-18, (unsigned char)-94, 112, 0,
+  (unsigned char)-18, (unsigned char)-94, 112, 0,
 };
 static const uvec8 kAddUV128 = {
   128u, 128u, 128u, 128u, 128u, 128u, 128u, 128u,
@@ -474,7 +477,7 @@ void OMITFP FastConvertYUVToABGRRow_SSE2(const uint8* y_buf,  // rdi
     , "xmm0", "xmm1", "xmm2", "xmm3"
 #endif
 );
-}
+} 
 
 // 6 registers
 void OMITFP FastConvertYUV444ToARGBRow_SSE2(const uint8* y_buf,  // rdi
@@ -548,58 +551,18 @@ void FastConvertYToARGBRow_SSE2(const uint8* y_buf,  // rdi
 #ifdef HAS_FASTCONVERTYUVTOARGBROW_MMX
 // 32 bit mmx gcc version
 
-#ifdef OSX
-#define UNDERSCORE "_"
-#else
-#define UNDERSCORE ""
-#endif
 
-void FastConvertYUVToARGBRow_MMX(const uint8* y_buf,
-                                 const uint8* u_buf,
-                                 const uint8* v_buf,
-                                 uint8* rgb_buf,
-                                 int width);
-  asm(
-  ".text                                       \n"
-#if defined(OSX) || defined(IOS)
-  ".globl _FastConvertYUVToARGBRow_MMX         \n"
-"_FastConvertYUVToARGBRow_MMX:                 \n"
-#else
-  ".global FastConvertYUVToARGBRow_MMX         \n"
-"FastConvertYUVToARGBRow_MMX:                  \n"
-#endif
-  "pusha                                       \n"
-  "mov    0x24(%esp),%edx                      \n"
-  "mov    0x28(%esp),%edi                      \n"
-  "mov    0x2c(%esp),%esi                      \n"
-  "mov    0x30(%esp),%ebp                      \n"
-  "mov    0x34(%esp),%ecx                      \n"
 
-"1:                                            \n"
-  "movzbl (%edi),%eax                          \n"
-  "lea    1(%edi),%edi                         \n"
-  "movzbl (%esi),%ebx                          \n"
-  "lea    1(%esi),%esi                         \n"
-  "movq   " UNDERSCORE "kCoefficientsRgbY+2048(,%eax,8),%mm0\n"
-  "movzbl (%edx),%eax                          \n"
-  "paddsw " UNDERSCORE "kCoefficientsRgbY+4096(,%ebx,8),%mm0\n"
-  "movzbl 0x1(%edx),%ebx                       \n"
-  "movq   " UNDERSCORE "kCoefficientsRgbY(,%eax,8),%mm1\n"
-  "lea    2(%edx),%edx                         \n"
-  "movq   " UNDERSCORE "kCoefficientsRgbY(,%ebx,8),%mm2\n"
-  "paddsw %mm0,%mm1                            \n"
-  "paddsw %mm0,%mm2                            \n"
-  "psraw  $0x6,%mm1                            \n"
-  "psraw  $0x6,%mm2                            \n"
-  "packuswb %mm2,%mm1                          \n"
-  "movq   %mm1,0x0(%ebp)                       \n"
-  "lea    8(%ebp),%ebp                         \n"
-  "sub    $0x2,%ecx                            \n"
-  "ja     1b                                   \n"
-  "popa                                        \n"
-  "ret                                         \n"
-);
 
+
+#include "jfr.h"
+
+
+
+
+
+
+      
 void FastConvertYUVToBGRARow_MMX(const uint8* y_buf,
                                  const uint8* u_buf,
                                  const uint8* v_buf,
@@ -607,13 +570,8 @@ void FastConvertYUVToBGRARow_MMX(const uint8* y_buf,
                                  int width);
   asm(
   ".text                                       \n"
-#if defined(OSX) || defined(IOS)
-  ".globl _FastConvertYUVToBGRARow_MMX         \n"
-"_FastConvertYUVToBGRARow_MMX:                 \n"
-#else
-  ".global FastConvertYUVToBGRARow_MMX         \n"
-"FastConvertYUVToBGRARow_MMX:                  \n"
-#endif
+  ".globl " UNDERSCORE "FastConvertYUVToBGRARow_MMX         \n"
+  UNDERSCORE "FastConvertYUVToBGRARow_MMX:                 \n"
   "pusha                                       \n"
   "mov    0x24(%esp),%edx                      \n"
   "mov    0x28(%esp),%edi                      \n"
@@ -641,8 +599,8 @@ void FastConvertYUVToBGRARow_MMX(const uint8* y_buf,
   "movq   %mm1,0x0(%ebp)                       \n"
   "lea    8(%ebp),%ebp                         \n"
   "sub    $0x2,%ecx                            \n"
-  "ja     1b                                   \n"
-  "popa                                        \n"
+  "ja     1b                                   \n"      
+  "popa                                        \n"       
   "ret                                         \n"
 );
 
@@ -653,13 +611,8 @@ void FastConvertYUVToABGRRow_MMX(const uint8* y_buf,
                                  int width);
   asm(
   ".text                                       \n"
-#if defined(OSX) || defined(IOS)
-  ".globl _FastConvertYUVToABGRRow_MMX         \n"
-"_FastConvertYUVToABGRRow_MMX:                 \n"
-#else
-  ".global FastConvertYUVToABGRRow_MMX         \n"
-"FastConvertYUVToABGRRow_MMX:                  \n"
-#endif
+  ".globl " UNDERSCORE "FastConvertYUVToABGRRow_MMX         \n"
+  UNDERSCORE "FastConvertYUVToABGRRow_MMX:                 \n"
   "pusha                                       \n"
   "mov    0x24(%esp),%edx                      \n"
   "mov    0x28(%esp),%edi                      \n"
@@ -699,13 +652,8 @@ void FastConvertYUV444ToARGBRow_MMX(const uint8* y_buf,
                                     int width);
   asm(
   ".text                                       \n"
-#if defined(OSX) || defined(IOS)
-  ".globl _FastConvertYUV444ToARGBRow_MMX      \n"
-"_FastConvertYUV444ToARGBRow_MMX:              \n"
-#else
-  ".global FastConvertYUV444ToARGBRow_MMX      \n"
-"FastConvertYUV444ToARGBRow_MMX:               \n"
-#endif
+  ".globl " UNDERSCORE "FastConvertYUV444ToARGBRow_MMX      \n"
+  UNDERSCORE "FastConvertYUV444ToARGBRow_MMX:              \n"
   "pusha                                       \n"
   "mov    0x24(%esp),%edx                      \n"
   "mov    0x28(%esp),%edi                      \n"
@@ -738,13 +686,8 @@ void FastConvertYToARGBRow_MMX(const uint8* y_buf,
                                int width);
   asm(
   ".text                                       \n"
-#if defined(OSX) || defined(IOS)
-  ".globl _FastConvertYToARGBRow_MMX           \n"
-"_FastConvertYToARGBRow_MMX:                   \n"
-#else
-  ".global FastConvertYToARGBRow_MMX           \n"
-"FastConvertYToARGBRow_MMX:                    \n"
-#endif
+  ".globl " UNDERSCORE "FastConvertYToARGBRow_MMX           \n"
+   UNDERSCORE "FastConvertYToARGBRow_MMX:                   \n"
   "push   %ebx                                 \n"
   "mov    0x8(%esp),%eax                       \n"
   "mov    0xc(%esp),%edx                       \n"
